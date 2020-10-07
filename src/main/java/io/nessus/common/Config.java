@@ -1,10 +1,24 @@
 package io.nessus.common;
 
+import java.util.Map;
+
 import io.nessus.common.service.Service;
 
 public interface Config {
 
-    Parameters getParameters();
+    /**
+     * Initializes the config with a mapping from 
+     * system property to env variable keys, like this ...
+     * 
+	 *	Map<String, String> mapping = new LinkedHashMap<>();
+	 *	mapping.put("jdbcServerUrl", "JDBC_SERVER_URL");
+	 *	mapping.put("jdbcUrl", "JDBC_URL");
+	 *	mapping.put("jdbcUser", "JDBC_USER");
+	 *	mapping.put("jdbcPass", "JDBC_PASS");
+     */
+	void prepare(Map<String, String> mapping);
+	
+	Parameters getParameters();
     
     <T> T getParameter(String name, Class<T> type);
     

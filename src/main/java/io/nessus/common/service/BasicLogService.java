@@ -25,10 +25,12 @@ public class BasicLogService implements LogService {
     }
     
 	@Override
-	public void log(Logger log, Level level, Throwable th, String msg, Object[] args) {
+	public void log(Logger log, Level level, Throwable th, String msg, Object... args) {
         
-        if (level == Level.ERROR) 
-            logError(log, th, msg, args);
+        if (level == Level.ERROR) {
+        	if (th != null) logError(log, th, msg);
+        	else logError(log, msg, args);
+        }
         
         else if (level == Level.WARN) 
             logWarn(log, msg, args);
@@ -44,8 +46,13 @@ public class BasicLogService implements LogService {
     }
     
     @Override
-	public void logError(Logger log, Throwable th, String msg, Object... args) {
-        log.error(msg, th);
+	public void logError(Logger log, Throwable th, String msg) {
+    	log.error(msg, th);
+    }
+    
+    @Override
+	public void logError(Logger log, String msg, Object... args) {
+    	log.error(msg, args);
     }
     
     @Override

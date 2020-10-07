@@ -4,8 +4,12 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.function.BiFunction;
 import java.util.logging.LogManager;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.slf4j.bridge.SLF4JBridgeHandler;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -23,6 +27,8 @@ import io.nessus.common.service.Service;
 @JsonSerialize(using = ConfigSerializer.class)
 public class BasicConfig implements Config {
 
+    protected final Logger LOG = LoggerFactory.getLogger(getClass().getName());
+    
     private final Map<String, Service> services = new LinkedHashMap<>();
     private final Parameters params;
     
@@ -47,6 +53,39 @@ public class BasicConfig implements Config {
         this.params = new Parameters(params);
     }
 
+    @Override
+	public void prepare(Map<String, String> mapping) {
+
+		BiFunction<String, String, String> logval = (k, v) -> {
+			if (v == null) return null;
+			boolean ispw = k.toLowerCase().contains("pass");
+			v = ispw && v.length() > 0  ? "*****" : v;
+			return v;
+		};
+		
+		// Override with env vars
+		
+		for (Entry<String, String> en : mapping.entrySet()) {
+			String key = en.getKey();
+			String value = System.getenv(en.getValue());
+			if (value != null) {
+				LOG.debug("Env {}: {}", en.getValue(), logval.apply(key, value));
+				putParameter(key, value);
+			}
+		}
+		
+		// Override with system properties
+		
+		for (Entry<String, String> en : mapping.entrySet()) {
+			String key = en.getKey();
+			String value = System.getProperty(key);
+			if (value != null) {
+				LOG.debug("Sys {}: {}", key, logval.apply(key, value));
+				putParameter(key, value);
+			}
+		}
+    }
+    
     @Override
     public Parameters getParameters() {
         return new Parameters(params);

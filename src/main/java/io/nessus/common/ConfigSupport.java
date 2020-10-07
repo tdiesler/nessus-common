@@ -22,12 +22,4 @@ public class ConfigSupport<T extends Config> extends LogSupport {
     public <S extends Service> S getService(Class<S> type) {
         return config.getService(type);
     }
-
-    protected void sleepSafe(long millis) {
-        try {
-            Thread.sleep(millis);
-        } catch (InterruptedException ex) {
-            // ignore
-        }
-    }
 }

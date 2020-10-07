@@ -3,6 +3,11 @@ package io.nessus.common.main;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.function.BiFunction;
 import java.util.jar.Attributes;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
@@ -10,7 +15,11 @@ import java.util.jar.Manifest;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import io.nessus.common.BasicConfig;
+import io.nessus.common.CheckedExceptionWrapper;
 import io.nessus.common.Config;
 import io.nessus.common.ConfigSupport;
 
@@ -42,14 +51,47 @@ public abstract class AbstractMain<C extends Config, T extends AbstractOptions> 
         }
     }
 
-    protected void prepare(T options) throws Exception {
+    @SuppressWarnings("unchecked")
+	protected void prepare(Map<String, String> mapping, T options) {
+
+		BiFunction<String, String, String> logval = (k, v) -> {
+			if (v == null) return null;
+			boolean ispw = k.toLowerCase().contains("pass");
+			v = ispw && v.length() > 0  ? "*****" : v;
+			return v;
+		};
+		
+		// Override with env vars 
+		// then with system props
+		
+		config.prepare(mapping);
+		
+		// Override with options
+		
+		Map<String, String> optsmap = Collections.emptyMap();
+		try {
+			ObjectMapper mapper = new ObjectMapper();
+			String content = mapper.writeValueAsString(options);
+			optsmap = mapper.readValue(content, LinkedHashMap.class);
+		} catch (JsonProcessingException ex) {
+			throw CheckedExceptionWrapper.create(ex);
+		}
+		
+		for (Entry<String, String> en : optsmap.entrySet()) {
+			String key = en.getKey();
+			String value = en.getValue();
+			if (value != null) {
+				logDebug("Opt {}: {}", key, logval.apply(key, value));
+				config.putParameter(en.getKey(), value);
+			}
+		}
     }
 
 	protected void startInternal(String... args) throws Exception {
 		
 		T options = parseArguments(args);
 		
-		prepare(options);
+		prepare(new LinkedHashMap<>(), options);
 		
 		doStart(options);
 	}
