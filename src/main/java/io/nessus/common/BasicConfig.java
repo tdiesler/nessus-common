@@ -3,6 +3,7 @@ package io.nessus.common;
 import java.io.IOException;
 import java.net.URL;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.function.BiFunction;
@@ -22,6 +23,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
 import io.nessus.common.BasicConfig.ConfigSerializer;
+import io.nessus.common.service.BasicLogService;
 import io.nessus.common.service.Service;
 
 @JsonSerialize(using = ConfigSerializer.class)
@@ -41,16 +43,19 @@ public class BasicConfig implements Config {
     	AssertArg.notNull(cfgurl, "Null cfgurl");
     	ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
 		Config cfg = mapper.readValue(cfgurl, BasicConfig.class);
-		this.params = cfg.getParameters();
+        this.params = cfg.getParameters();
+        addService(new BasicLogService());
     }
 
     @JsonCreator
     public BasicConfig(Map<String, ? extends Object> params) {
         this.params = new Parameters(params);
+        addService(new BasicLogService());
     }
 
     public BasicConfig(Parameters params) {
         this.params = new Parameters(params);
+        addService(new BasicLogService());
     }
 
     @Override
@@ -86,6 +91,11 @@ public class BasicConfig implements Config {
 		}
     }
     
+    @Override
+    public List<String> getParameterNames() {
+        return params.keys();
+    }
+
     @Override
     public Parameters getParameters() {
         return new Parameters(params);

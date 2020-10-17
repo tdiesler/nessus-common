@@ -18,26 +18,20 @@ import org.kohsuke.args4j.CmdLineParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import io.nessus.common.BasicConfig;
 import io.nessus.common.CheckedExceptionWrapper;
 import io.nessus.common.Config;
 import io.nessus.common.ConfigSupport;
 
-public abstract class AbstractMain<C extends Config, T extends AbstractOptions> extends ConfigSupport<C> {
+public abstract class AbstractMain<T extends Config, O extends AbstractOptions> extends ConfigSupport<T> {
 
     private static String implVersion;
     private static String implBuild;
 
-    @SuppressWarnings("unchecked")
-	public AbstractMain(URL cfgurl) throws IOException {
-        this((C) new BasicConfig(cfgurl));
-    }
-
-    public AbstractMain(C config) {
+    public AbstractMain(T config) {
         super(config);
     }
 
-    protected abstract T createOptions();
+    protected abstract O createOptions();
 
     public final void start(String... args) {
         
@@ -52,7 +46,7 @@ public abstract class AbstractMain<C extends Config, T extends AbstractOptions> 
     }
 
     @SuppressWarnings("unchecked")
-	protected void prepare(Map<String, String> mapping, T options) {
+	protected void prepare(Map<String, String> mapping, O options) {
 
 		BiFunction<String, String, String> logval = (k, v) -> {
 			if (v == null) return null;
@@ -61,8 +55,7 @@ public abstract class AbstractMain<C extends Config, T extends AbstractOptions> 
 			return v;
 		};
 		
-		// Override with env vars 
-		// then with system props
+		// Override with env vars then with system props
 		
 		config.prepare(mapping);
 		
@@ -89,23 +82,23 @@ public abstract class AbstractMain<C extends Config, T extends AbstractOptions> 
 
 	protected void startInternal(String... args) throws Exception {
 		
-		T options = parseArguments(args);
+		O options = parseArguments(args);
 		
 		prepare(new LinkedHashMap<>(), options);
 		
 		doStart(options);
 	}
     
-    protected abstract void doStart(T options) throws Exception;
+    protected abstract void doStart(O options) throws Exception;
 
     @SuppressWarnings("unchecked")
-    protected T parseArguments(String... args) throws CmdLineException {
+    protected O parseArguments(String... args) throws CmdLineException {
         
-        T options = createOptions();
+        O options = createOptions();
         CmdLineParser parser = new CmdLineParser(options);
 
         // Obtain version information from the manifest that contains the options class
-        Class<T> clazz = (Class<T>) options.getClass();
+        Class<O> clazz = (Class<O>) options.getClass();
         String className = clazz.getSimpleName() + ".class";
         String classPath = clazz.getResource(className).toString();
         if (classPath.startsWith("jar")) {
@@ -156,7 +149,7 @@ public abstract class AbstractMain<C extends Config, T extends AbstractOptions> 
             return String.format("%s (%s)", implVersion, implBuild);
     }
 
-    protected void helpScreen(T options) {
+    protected void helpScreen(O options) {
         System.err.println(options.cmd + " [options...]");
         CmdLineParser parser = new CmdLineParser(options);
         parser.printUsage(System.err);

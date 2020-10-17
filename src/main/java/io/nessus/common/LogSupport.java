@@ -65,6 +65,7 @@ public abstract class LogSupport {
 	private LogService getLogService() {
         if (logService == null) {
             logService = getConfig().getService(LogService.class);
+            AssertState.notNull(logService, "No LogService registered");
             logService.init(getConfig());
         }
         return logService;

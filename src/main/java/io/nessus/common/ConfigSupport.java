@@ -1,17 +1,15 @@
 package io.nessus.common;
 
 
-import io.nessus.common.service.BasicLogService;
 import io.nessus.common.service.Service;
 
 public class ConfigSupport<T extends Config> extends LogSupport {
 
     protected final T config;
     
-    protected ConfigSupport(T config) {
+    public ConfigSupport(T config) {
         AssertArg.notNull(config, "Null config");
         this.config = config;
-        config.addService(new BasicLogService());
     }
     
     @Override

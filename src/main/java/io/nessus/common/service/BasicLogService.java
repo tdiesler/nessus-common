@@ -1,23 +1,9 @@
 package io.nessus.common.service;
 
-import java.io.PrintStream;
-
 import org.slf4j.Logger;
 import org.slf4j.event.Level;
 
 public class BasicLogService implements LogService {
-    
-    static final ThreadLocal<PrintStream> streamAssociation = new ThreadLocal<>();
-    
-    public static PrintStream getPrintStream() {
-        return streamAssociation.get();
-    }
-    
-    public static PrintStream setPrintStream(PrintStream out) {
-        PrintStream prev = streamAssociation.get();
-        streamAssociation.set(out);
-        return prev;
-    }
     
     @Override
     public String getType() {

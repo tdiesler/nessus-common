@@ -1,5 +1,6 @@
 package io.nessus.common;
 
+import java.util.List;
 import java.util.Map;
 
 import io.nessus.common.service.Service;
@@ -14,9 +15,11 @@ public interface Config {
 	 *	mapping.put("jdbcServerUrl", "JDBC_SERVER_URL");
 	 *	mapping.put("jdbcUrl", "JDBC_URL");
 	 *	mapping.put("jdbcUser", "JDBC_USER");
-	 *	mapping.put("jdbcPass", "JDBC_PASS");
+	 *	mapping.put("jdbcPassword", "JDBC_PASSWORD");
      */
 	void prepare(Map<String, String> mapping);
+	
+	List<String> getParameterNames();
 	
 	Parameters getParameters();
     
