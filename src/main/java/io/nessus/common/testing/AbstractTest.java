@@ -14,9 +14,9 @@ import io.nessus.common.Parameters;
 import io.nessus.common.service.BasicLogService;
 import io.nessus.common.service.Service;
 
-public abstract class AbstractTest extends LogSupport {
+public abstract class AbstractTest<T extends Config> extends LogSupport {
 
-    private Config config;
+    private T config;
     
     protected <S extends Service> S getService(Class<S> type) {
         return getConfig().getService(type);
@@ -45,14 +45,15 @@ public abstract class AbstractTest extends LogSupport {
         return new PrintStream(new FileOutputStream(file));
     }
     
-	protected Config createConfig() {
+	@SuppressWarnings("unchecked")
+	protected T createConfig() {
         Config config = new BasicConfig(new Parameters());
         config.addService(new BasicLogService());
-        return config;
+        return (T) config;
     }
     
     @Override
-    public Config getConfig() {
+    public T getConfig() {
         if (config == null) {
             config = createConfig();
             config.initServices();

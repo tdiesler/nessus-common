@@ -14,7 +14,7 @@ import io.nessus.common.BasicConfig;
 import io.nessus.common.Config;
 import io.nessus.common.testing.AbstractTest;
 
-public class BasicConfigTest extends AbstractTest {
+public class BasicConfigTest extends AbstractTest<BasicConfig> {
 
     @Test
     public void testDefault() throws Exception {
