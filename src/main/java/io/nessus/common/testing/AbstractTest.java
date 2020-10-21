@@ -8,6 +8,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import io.nessus.common.BasicConfig;
+import io.nessus.common.CheckedExceptionWrapper;
 import io.nessus.common.Config;
 import io.nessus.common.LogSupport;
 import io.nessus.common.Parameters;
@@ -46,7 +47,7 @@ public abstract class AbstractTest<T extends Config> extends LogSupport {
     }
     
 	@SuppressWarnings("unchecked")
-	protected T createConfig() {
+	protected T createConfig() throws Exception {
         Config config = new BasicConfig(new Parameters());
         config.addService(new BasicLogService());
         return (T) config;
@@ -55,7 +56,11 @@ public abstract class AbstractTest<T extends Config> extends LogSupport {
     @Override
     public T getConfig() {
         if (config == null) {
-            config = createConfig();
+            try {
+				config = createConfig();
+			} catch (Exception ex) {
+				throw CheckedExceptionWrapper.create(ex);
+			}
             config.initServices();
         }
         return config;
