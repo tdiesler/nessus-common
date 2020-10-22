@@ -10,4 +10,7 @@ public interface Service {
 	
 	default void init(Config config) {
 	}
+
+	default void close() {
+	}
 }

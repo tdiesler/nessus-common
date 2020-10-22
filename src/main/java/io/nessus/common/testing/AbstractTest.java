@@ -7,6 +7,9 @@ import java.io.PrintStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import org.junit.After;
+import org.junit.Before;
+
 import io.nessus.common.BasicConfig;
 import io.nessus.common.CheckedExceptionWrapper;
 import io.nessus.common.Config;
@@ -19,6 +22,17 @@ public abstract class AbstractTest<T extends Config> extends LogSupport {
 
     private T config;
     
+    @Before
+    public void before() throws Exception {
+    }
+
+    @After
+    public void after() throws Exception {
+    	if (config != null) {
+            config.closeServices();
+    	}
+    }
+
     protected <S extends Service> S getService(Class<S> type) {
         return getConfig().getService(type);
     }

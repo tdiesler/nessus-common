@@ -34,4 +34,6 @@ public interface Config {
     <T extends Service> T getService(Class<T> type);
     
     void initServices();
+    
+    void closeServices();
 }

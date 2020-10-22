@@ -141,7 +141,11 @@ public class BasicConfig implements Config {
     	services.values().forEach(srv -> srv.init(this));
 	}
 
-    
+    @Override
+	public void closeServices() {
+    	services.values().forEach(srv -> srv.close());
+	}
+
     @Override
 	public int hashCode() {
 		return params.hashCode();
