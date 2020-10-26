@@ -1,5 +1,7 @@
 package io.nessus.common.service;
 
+import java.io.PrintStream;
+
 import org.slf4j.Logger;
 import org.slf4j.event.Level;
 
@@ -33,21 +35,25 @@ public class BasicLogService implements LogService {
     
     @Override
 	public void logError(Logger log, Throwable th, String msg) {
+        logToPrintStream(th, msg);
     	log.error(msg, th);
     }
     
     @Override
 	public void logError(Logger log, String msg, Object... args) {
+        logToPrintStream(null, msg, args);
     	log.error(msg, args);
     }
     
     @Override
 	public void logWarn(Logger log, String msg, Object... args) {
+        logToPrintStream(null, msg, args);
         log.warn(msg, args);
     }
     
     @Override
 	public void logInfo(Logger log, String msg, Object... args) {
+        logToPrintStream(null, msg, args);
         log.info(msg, args);
     }
 
@@ -68,5 +74,15 @@ public class BasicLogService implements LogService {
             msg = String.format(msg, args);
     	}
         return msg;
+    }
+    
+    private void logToPrintStream(Throwable th, String msg, Object... args) {
+        PrintStream out = LogService.getPrintStream();
+        if (out != null) {
+            out.println(format(msg, args));
+            if (th != null) { 
+                th.printStackTrace(out);
+            }
+        }
     }
 }
