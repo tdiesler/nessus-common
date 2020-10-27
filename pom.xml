@@ -2,12 +2,12 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <name>Nessus</name>
+    <name>Nessus :: Common</name>
 
     <groupId>io.nessus</groupId>
     <artifactId>nessus-common</artifactId>
     <version>1.0.4-SNAPSHOT</version>
-    <packaging>jar</packaging>
+    <packaging>pom</packaging>
     
     <description>Nessus</description>
     <url>https://github.com/tdiesler/nessus-common</url>
@@ -22,6 +22,8 @@
     <properties>
         <version.args4j>2.33</version.args4j>
         <version.fasterxml.jackson>2.11.1</version.fasterxml.jackson>
+        <version.io.undertow>2.1.0.Final</version.io.undertow>
+        <version.jboss.resteasy>4.5.8.Final</version.jboss.resteasy>
         <version.junit>4.11</version.junit>
         <version.slf4j>1.7.28</version.slf4j>
 		        
@@ -55,6 +57,26 @@
                 <artifactId>jackson-dataformat-yaml</artifactId>
                 <version>${version.fasterxml.jackson}</version>
             </dependency>
+            <dependency>
+                <groupId>io.undertow</groupId>
+                <artifactId>undertow-core</artifactId>
+                <version>${version.io.undertow}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.jboss.resteasy</groupId>
+                <artifactId>resteasy-jackson2-provider</artifactId>
+                <version>${version.jboss.resteasy}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.jboss.resteasy</groupId>
+                <artifactId>resteasy-client</artifactId>
+                <version>${version.jboss.resteasy}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.jboss.resteasy</groupId>
+                <artifactId>resteasy-undertow</artifactId>
+                <version>${version.jboss.resteasy}</version>
+            </dependency>
 	        <dependency>
 	            <groupId>org.slf4j</groupId>
 	            <artifactId>jul-to-slf4j</artifactId>
@@ -73,34 +95,12 @@
 	    </dependencies>
     </dependencyManagement>
 
-    <!-- Dependencies -->
-    <dependencies>
-        <dependency>
-            <groupId>args4j</groupId>
-            <artifactId>args4j</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.dataformat</groupId>
-            <artifactId>jackson-dataformat-yaml</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>jul-to-slf4j</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-log4j12</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-        </dependency>
-    </dependencies>
-        
+    <!-- Modules -->
+    <modules>
+        <module>core</module>
+        <module>rest</module>
+    </modules>
+    
     <build>
         <!-- Plugin Management -->
         <pluginManagement>
