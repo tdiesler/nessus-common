@@ -5,7 +5,7 @@
     <parent>
 	    <groupId>io.nessus</groupId>
 	    <artifactId>nessus-common</artifactId>
-	    <version>1.0.4-SNAPSHOT</version>
+	    <version>1.1.0</version>
     </parent>
     
     <name>Nessus :: Common :: Rest</name>
