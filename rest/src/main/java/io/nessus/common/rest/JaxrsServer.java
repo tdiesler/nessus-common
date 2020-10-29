@@ -4,6 +4,8 @@ import javax.net.ssl.SSLContext;
 import javax.ws.rs.core.Application;
 
 import org.jboss.resteasy.plugins.server.undertow.UndertowJaxrsServer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import io.nessus.common.Config;
 import io.undertow.Undertow;
@@ -13,6 +15,8 @@ import io.undertow.server.HttpHandler;
 // UndertowJaxrsServer is not sufficiently abstracted
 public class JaxrsServer extends UndertowJaxrsServer {
 
+    static final Logger LOG = LoggerFactory.getLogger(JaxrsServer.class);
+    
 	private String hostname;
 	private Integer httpPort;
 	private Integer httpsPort;
@@ -49,6 +53,8 @@ public class JaxrsServer extends UndertowJaxrsServer {
 		if (httpsPort != null) {
 			builder.addHttpsListener(httpsPort, hostname, sslContext);
 		}
+		
+		LOG.info("Starting {}", this);
 		
 		server = builder.build();
 		server.start();

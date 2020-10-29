@@ -24,6 +24,7 @@ public abstract class AbstractTest<T extends Config> extends LogSupport {
     
     @Before
     public void before() throws Exception {
+    	// do nothing
     }
 
     @After
