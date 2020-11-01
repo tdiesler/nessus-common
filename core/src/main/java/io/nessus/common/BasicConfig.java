@@ -31,7 +31,7 @@ public class BasicConfig implements Config {
 
     protected final Logger LOG = LoggerFactory.getLogger(getClass().getName());
     
-    private final Map<String, Service> services = new LinkedHashMap<>();
+    private final Map<Class<Service>, Service> services = new LinkedHashMap<>();
     private final Parameters params;
     
     static {
@@ -124,7 +124,7 @@ public class BasicConfig implements Config {
     @Override
     @SuppressWarnings("unchecked")
     public <T extends Service> T getService(Class<T> type) {
-        T result = (T) services.get(type.getName());
+        T result = (T) services.get(type);
         if (result == null) {
             for (Service srv : services.values()) {
                 if (type.isAssignableFrom(srv.getClass())) {

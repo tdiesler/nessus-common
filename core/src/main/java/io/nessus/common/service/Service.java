@@ -4,8 +4,9 @@ import io.nessus.common.Config;
 
 public interface Service {
  
-	default String getType() {
-		return getClass().getName();
+	@SuppressWarnings("unchecked")
+	default <T extends Service> Class<T> getType() {
+		return (Class<T>) getClass();
 	}
 	
 	default void init(Config config) {

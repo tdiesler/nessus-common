@@ -7,11 +7,12 @@ import org.slf4j.event.Level;
 
 public class BasicLogService implements LogService {
     
-    @Override
-    public String getType() {
-    	return LogService.class.getName();
-    }
-    
+	@Override
+	@SuppressWarnings("unchecked")
+	public Class<LogService> getType() {
+		return LogService.class;
+	}
+
 	@Override
 	public void log(Logger log, Level level, Throwable th, String msg, Object... args) {
         
