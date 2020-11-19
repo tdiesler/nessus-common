@@ -6,7 +6,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.function.BiFunction;
 import java.util.logging.LogManager;
 
 import org.slf4j.Logger;
@@ -61,20 +60,13 @@ public class BasicConfig implements Config {
     @Override
 	public void prepare(Map<String, String> mapping) {
 
-		BiFunction<String, String, String> logval = (k, v) -> {
-			if (v == null) return null;
-			boolean ispw = k.toLowerCase().contains("pass");
-			v = ispw && v.length() > 0  ? "*****" : v;
-			return v;
-		};
-		
 		// Override with env vars
 		
 		for (Entry<String, String> en : mapping.entrySet()) {
 			String key = en.getKey();
 			String value = System.getenv(en.getValue());
 			if (value != null) {
-				LOG.debug("Env {}: {}", en.getValue(), logval.apply(key, value));
+				LOG.debug("Env {}: {}", en.getValue(), redactValue(key, value));
 				putParameter(key, value);
 			}
 		}
@@ -85,10 +77,18 @@ public class BasicConfig implements Config {
 			String key = en.getKey();
 			String value = System.getProperty(key);
 			if (value != null) {
-				LOG.debug("Sys {}: {}", key, logval.apply(key, value));
+				LOG.debug("Sys {}: {}", key, redactValue(key, value));
 				putParameter(key, value);
 			}
 		}
+    }
+    
+    public static String redactValue(String key, Object value) {
+		if (value == null) return null;
+		boolean redact = key.toLowerCase().contains("pass");
+		String res = value.toString();
+		res = redact ? "*****" : res;
+		return res;
     }
     
     @Override

@@ -1,5 +1,7 @@
 package io.nessus.common.main;
 
+import static io.nessus.common.BasicConfig.redactValue;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -7,7 +9,6 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.function.BiFunction;
 import java.util.jar.Attributes;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
@@ -48,13 +49,6 @@ public abstract class AbstractMain<T extends Config, O extends AbstractOptions> 
     @SuppressWarnings("unchecked")
 	protected void prepare(Map<String, String> mapping, O options) {
 
-		BiFunction<String, String, String> logval = (k, v) -> {
-			if (v == null) return null;
-			boolean ispw = k.toLowerCase().contains("pass");
-			v = ispw && v.length() > 0  ? "*****" : v;
-			return v;
-		};
-		
 		// Override with env vars then with system props
 		
 		config.prepare(mapping);
@@ -74,10 +68,20 @@ public abstract class AbstractMain<T extends Config, O extends AbstractOptions> 
 			String key = en.getKey();
 			String value = en.getValue();
 			if (value != null) {
-				logDebug("Opt {}: {}", key, logval.apply(key, value));
+				logDebug("Opt {}: {}", key, redactValue(key, value));
 				config.putParameter(en.getKey(), value);
 			}
 		}
+		
+        // Log the initial configuration
+		
+        getConfig().getParameters().toMap().entrySet().stream()
+            .sorted((e1, e2) -> e1.getKey().compareTo(e2.getKey()))
+            .forEach(en -> { 
+            	String key = en.getKey();
+            	Object value = en.getValue();
+				logInfo("{}: {}", key, redactValue(key, value)); 
+            });
     }
 
 	protected void startInternal(String... args) throws Exception {
