@@ -24,7 +24,10 @@ import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
+import java.util.ArrayList;
 import java.util.Base64;
+import java.util.Iterator;
+import java.util.List;
 
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.KeyManagerFactory;
@@ -45,9 +48,9 @@ public class SSLContextBuilder {
 	private String keystoreType = KeyStore.getDefaultType();
 	private char[] keystorePassword = "changeit".toCharArray();
 	private Path keystorePath;
-	private KeyMaterial privKeyMaterial;
-	private KeyMaterial certMaterial;
-	private KeyMaterial pemMaterial;
+	private List<KeyMaterial> privKeyMaterials = new ArrayList<>();
+	private List<KeyMaterial> certMaterials = new ArrayList<>();
+	private List<KeyMaterial> pemMaterials = new ArrayList<>();
 	
 	static class KeyMaterial {
 		final String alias;
@@ -64,17 +67,17 @@ public class SSLContextBuilder {
 	}
 	
 	public SSLContextBuilder addPem(String alias, Path pemPath) {
-		this.pemMaterial = new KeyMaterial(alias, pemPath);
+		this.pemMaterials.add(new KeyMaterial(alias, pemPath));
 		return this;
 	}
 	
 	public SSLContextBuilder addCertificate(String alias, Path certPath) {
-		this.certMaterial = new KeyMaterial(alias, certPath);
+		this.certMaterials.add(new KeyMaterial(alias, certPath));
 		return this;
 	}
 	
 	public SSLContextBuilder addPrivateKey(String alias, Path privKeyPath) {
-		this.privKeyMaterial = new KeyMaterial(alias, privKeyPath);
+		this.privKeyMaterials.add(new KeyMaterial(alias, privKeyPath));
 		return this;
 	}
 	
@@ -90,13 +93,13 @@ public class SSLContextBuilder {
 	
     public SSLContext build() throws IOException, GeneralSecurityException {
         
-        KeyStore keyStore = loadKeyStore(keystorePath, keystoreType, keystorePassword);
-
+        KeyStore keystore = loadKeyStore(keystorePath, keystoreType, keystorePassword);
+        
         SSLContext sslContext;
         try {
         	
-            KeyManager[] keyManagers = buildKeyManagers(keyStore, keystorePassword);
-            TrustManager[] trustManagers = buildTrustManagers(keyStore);
+            KeyManager[] keyManagers = buildKeyManagers(keystore, keystorePassword);
+            TrustManager[] trustManagers = buildTrustManagers(keystore);
             
             sslContext = SSLContext.getInstance("TLS");
             sslContext.init(keyManagers, trustManagers, null);
@@ -130,17 +133,23 @@ public class SSLContextBuilder {
     		keystorePath.toFile().getParentFile().mkdirs();
     		
             keystore.load(null, keystorePassword);
-            
-            Certificate cert = null;
-            
-            if (pemMaterial != null) {
+    	}
+    	
+    	int addedMaterials = 0;
+    	
+        if (!pemMaterials.isEmpty()) {
+        	
+            Iterator<KeyMaterial> materialIterator = pemMaterials.iterator();
+            while (materialIterator.hasNext()) {
+            	
+            	KeyMaterial pemMaterial = materialIterator.next();
             	
             	Path pemPath = pemMaterial.path;
             	String pemAlias = pemMaterial.alias;
             	
-        		LOG.info("Reading pem material: {}", pemPath);
+        		LOG.info("Adding pem material: {}", pemPath);
         		
-            	cert = readCertificate(pemPath);
+        		Certificate cert = readCertificate(pemPath);
             	if (cert != null) {
                     keystore.setCertificateEntry(pemAlias, cert);
             	}
@@ -150,43 +159,69 @@ public class SSLContextBuilder {
             		PrivateKeyEntry keyEntry = new PrivateKeyEntry(privKey, new Certificate[] { cert });
                     keystore.setEntry(pemAlias, keyEntry, new PasswordProtection(keystorePassword));
             	}
+            	
+            	materialIterator.remove();
+                addedMaterials++;
             }
-            
-            if (certMaterial != null) {
+        }
+        
+        if (!certMaterials.isEmpty()) {
+        	
+            Iterator<KeyMaterial> materialIterator = certMaterials.iterator();
+            while (materialIterator.hasNext()) {
+            	
+            	KeyMaterial certMaterial = materialIterator.next();
             	
             	Path crtPath = certMaterial.path;
             	String crtAlias = certMaterial.alias;
             	
-        		LOG.info("Reading certificate material: {}", crtPath);
+        		LOG.info("Adding certificate material: {}", crtPath);
         		
-            	cert = readCertificate(crtPath);
+        		Certificate cert = readCertificate(crtPath);
             	AssertState.notNull(cert, "Null certificate");
             	
                 keystore.setCertificateEntry(crtAlias, cert);
+            	
+            	materialIterator.remove();
+                addedMaterials++;
             }
-            
-            if (privKeyMaterial != null) {
+
+            if (!privKeyMaterials.isEmpty()) {
             	
-            	Path privKeyPath = privKeyMaterial.path;
-            	String privAlias = privKeyMaterial.alias;
-            	
-        		LOG.info("Reading private key material: {}", privKeyPath);
-        		
-            	RSAPrivateKey privKey = readPrivateKey(privKeyPath);
-            	AssertState.notNull(privKey, "Null private key");
-            	AssertState.notNull(cert, "Null certificate");
-            	
-        		PrivateKeyEntry keyEntry = new PrivateKeyEntry(privKey, new Certificate[] { cert });
-                keystore.setEntry(privAlias, keyEntry, new PasswordProtection(keystorePassword));
+                materialIterator = privKeyMaterials.iterator();
+                while (materialIterator.hasNext()) {
+                	
+                	KeyMaterial privKeyMaterial = materialIterator.next();
+                	
+                	Path privKeyPath = privKeyMaterial.path;
+                	String privAlias = privKeyMaterial.alias;
+                	
+            		LOG.info("Adding private key material: {}", privKeyPath);
+            		
+                	RSAPrivateKey privKey = readPrivateKey(privKeyPath);
+                	AssertState.notNull(privKey, "Null private key");
+                	
+                	Certificate cert = keystore.getCertificate(privAlias);
+                	AssertState.notNull(cert, "Cannot find certificate for: " + privAlias);
+                	
+            		PrivateKeyEntry keyEntry = new PrivateKeyEntry(privKey, new Certificate[] { cert });
+                    keystore.setEntry(privAlias, keyEntry, new PasswordProtection(keystorePassword));
+                	
+                	materialIterator.remove();
+                    addedMaterials++;
+                }
             }
-            
+        }
+        
+        if (addedMaterials > 0) {
+        	
     		LOG.info("Storing keystore file: {}", keystorePath);
     		
             try (FileOutputStream fos = new FileOutputStream(keystorePath.toFile())) {
             	keystore.store(fos, keystorePassword);
-            }    	
-    	}
-    	
+            }
+        }
+        
         return keystore;
     }
 
